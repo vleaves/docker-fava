@@ -10,17 +10,19 @@ jobs:
     name: Push Docker image to Alibaba Cloud ACR
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Login to Alibaba Cloud ACR
-        env:
+    env:
           ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
           ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
           ACR_REGISTRY: ${{ secrets.ACR_REGISTRY }}
           ACR_NAMESPACE: ${{ secrets.ACR_NAMESPACE }}
           ACR_REPO: ${{ secrets.ACR_REPO }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Alibaba Cloud ACR
+
         run: |
           printf '%s' "$ACR_PASSWORD" | docker login \
             --username "$ACR_USERNAME" \
