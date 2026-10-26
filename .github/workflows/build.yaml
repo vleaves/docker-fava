@@ -3,28 +3,35 @@ name: Publish Docker image
 on:
   push:
     branches:
-      - 'main'
+      - main
 
 jobs:
   push_to_registry:
-    name: Push Docker image to Docker Hub
+    name: Push Docker image to Alibaba Cloud ACR
     runs-on: ubuntu-latest
-    steps:        
-    - name: Checkout code
-      uses: actions/checkout@v4
 
-    - name: Check DNS
-      run: |
-        dig "${{ secrets.ACR_REGISTRY }}" +trace
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Login to Alibaba Cloud ACR
-      run: |
-        echo ${{ secrets.ACR_PASSWORD }} | docker login --username ${{ secrets.ACR_USERNAME }} ${{ secrets.ACR_REGISTRY }} --password-stdin 
+      - name: Login to Alibaba Cloud ACR
+        env:
+          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+          ACR_REGISTRY: ${{ secrets.ACR_REGISTRY }}
+          ACR_NAMESPACE: ${{ secrets.ACR_NAMESPACE }}
+          ACR_REPO: ${{ secrets.ACR_REPO }}
+        run: |
+          printf '%s' "$ACR_PASSWORD" | docker login \
+            --username "$ACR_USERNAME" \
+            "$ACR_REGISTRY" \
+            --password-stdin
 
-    - name: Build Docker Image
-      run: |
-        docker build -t ${{ secrets.ACR_REGISTRY }}/${{ secrets.ACR_NAMESPACE }}/${{ secrets.ACR_REPO }}:latest .
+      - name: Build Docker Image
+        run: |
+          docker build \
+            -t "$ACR_REGISTRY/$ACR_NAMESPACE/$ACR_REPO:latest" .
 
-    - name: Push Docker Image to ACR
-      run: |
-        docker push ${{ secrets.ACR_REGISTRY }}/${{ secrets.ACR_NAMESPACE }}/${{ secrets.ACR_REPO }}:latest
+      - name: Push Docker Image to ACR
+        run: |
+          docker push "$ACR_REGISTRY/$ACR_NAMESPACE/$ACR_REPO:latest"
